@@ -1,0 +1,41 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: ToCa Race Driver 3 Save File
+//   Authors: Nenkai#9075
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+struct SGF2
+{
+    struct Header
+    {
+        char Magic[4];
+        int SectorCount <comment="0x800, for profile">;
+        int HeaderCRC <format=hex, comment="Starting from 0x0C to 0x80">;
+        int u;
+        int u2;
+    
+        struct
+        {
+            int Day;
+            int Month;
+            int Year;
+            int Hour;
+            int Minute;
+            int Second;
+        } SaveDate;
+    
+        int ProfSize <format=hex, fgcolor=cGreen>;
+        int ProfileCRC <format=hex, comment="Starting from 0x80 + SectorCount * 0x800">;
+        char Name[0x40];
+        float PercentageCompletion;
+        int AccessCode;
+        int pad;
+    } header;
+} SaveGameFile2 <size=0x80, bgcolor=cPurple>;
