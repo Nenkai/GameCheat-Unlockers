@@ -6,6 +6,7 @@ A Python tool to generate cheat codes for a given access code. To use, run `gene
 * PC
 * PS2
 * PSP (CMR2005 Plus)
+* Xbox
 
 # Cheats
 CMR2005 has 9 working cheats and at least 2 hidden cheats:
