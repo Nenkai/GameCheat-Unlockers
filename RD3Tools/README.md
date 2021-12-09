@@ -14,7 +14,7 @@ The save file holds the access code twice, and the access codes in the save file
 
 # Cheat Table
 
-The code allows certain cheats to be inputted without any crypto/hash check. It is the case for the `NODISC` cheat.
+The game code allows certain cheats to be inputted without any crypto/hash check. It is the case for the `NODISC` cheat.
 
 | Id |  Name   |           Comment           | Notes |
 |----|:-------:|:---------------------------:|-------|
