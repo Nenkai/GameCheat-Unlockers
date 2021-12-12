@@ -11,3 +11,5 @@ A collection of tools to generate or unlock bonus codes for games that used them
 * TOCA Race Driver 3:
   * [Save Checksum Fixer & Bonus Unlocker](RD3Tools/) (by Nenkai)
   * [Plaintext Cheats Unlocker](RD3PlainCheats/) (by Silent)
+* Race Driver GRID:
+  * [Save Bonus Unlocker](GridBonusUnlocker/) (by Nenkai)
