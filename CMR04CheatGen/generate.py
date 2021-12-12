@@ -22,7 +22,6 @@ def generateCode(accessCode, cheatID):
         return x - int(x / y) * y
 
     def calcSeed(input):
-        seed = 1
         if input != 0:
             seed = 0x181AB
             for _ in range(input - 1):

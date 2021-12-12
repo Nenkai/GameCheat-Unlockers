@@ -49,7 +49,6 @@ def generateCode(IV1, IV2, accessCode, cheatID):
         return x - int(x / y) * y
 
     def calcSeed(input):
-        seed = 1
         if input != 0:
             seed = 0xF82D
             for _ in range(input - 1):

@@ -2,6 +2,8 @@
 A collection of tools to generate or unlock bonus codes for games that used them such as Codemasters Games.
 
 ## Games Supported
+* Colin McRae Rally 3:
+  * [Cheat Generator](CMR3CheatGen/) (by Silent)
 * Colin McRae Rally 04:
   * [Cheat Generator](CMR04CheatGen/) (by Silent)
 * Colin McRae Rally 2005 (and CMR2005 Plus):
