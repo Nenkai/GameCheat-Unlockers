@@ -20,24 +20,30 @@ public class Program
         Console.WriteLine("GridBonusUnlocker by Nenkai#9075");
         Console.WriteLine();
 
-        if (!Directory.Exists(args[0]))
+        if (args.Length != 1)
         {
             Console.WriteLine("   Input: GridBonusUnlocker <path to save directory>");
             Console.WriteLine(@"  Save directory is located at 'Documents\Codemasters\GRID\savegame'.");
             return;
         }
 
+        if (!Directory.Exists(args[0]))
+        {
+            Console.WriteLine("Not a valid directory.");
+            return;
+        }
+
         var decryptedUnlockFilePath = Path.Combine(args[0], Scrambler.ScrambleString("Unlocks"));
         if (!File.Exists(decryptedUnlockFilePath))
         {
-            Console.WriteLine("Save directory is missing the Unlocks file make sure this is a valid save game directory.");
+            Console.WriteLine($"Save directory is missing the Unlocks file ({Scrambler.ScrambleString("Unlocks")}), make sure this is a valid save game directory.");
             return;
         }
 
         var decryptedUnlockFile = SaveFile.DecryptSaveFile(decryptedUnlockFilePath);
         if (decryptedUnlockFile.Length < 0x800)
         {
-            Console.WriteLine("Unlocks file is corrupted.");
+            Console.WriteLine("Unlocks file is invalid or corrupted.");
             return;
         }
 
@@ -67,7 +73,7 @@ public class Program
                 break;
             else if (line == "Q")
                 return;
-            
+
             Console.Clear();
         }
 
