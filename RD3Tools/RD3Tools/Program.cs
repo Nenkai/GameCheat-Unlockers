@@ -36,16 +36,6 @@ public class Program
             Console.WriteLine("  ");
             Console.WriteLine("RD3Tools <path_to_save_file> [--unlock-bonuses] (Will fix up a save checksum for editing, and optionally unlock bonuses.)");
         }
-
-        /*
-        byte[] buf = new byte[0x10];
-        Encoding.ASCII.GetBytes("R4XM651GCWVJJ", buf);
-
-        for (byte i = 0; i < 0x0C; i++)
-            CheckCode(buf, 14, Key1, 1, 1027, i);
-
-        GetCodeForCheat(1027, 7);
-        */
     }
 
 }

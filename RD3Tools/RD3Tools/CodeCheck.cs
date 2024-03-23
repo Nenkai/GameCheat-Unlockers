@@ -5,14 +5,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
 using System.Buffers.Binary;
+using System.Security.Cryptography;
 
 using Microsoft.Win32;
+using System.Runtime.InteropServices;
 
 namespace RD3Tools;
 
 public class CodeCheck
 {
-    static Dictionary<int, string> Cheats = new()
+    static Dictionary<byte, string> Cheats = new()
     {
         { 0, "CHAMPS" },
         { 1, "XCHAMPS" },
@@ -27,65 +29,93 @@ public class CodeCheck
         { 11, "NODISC" },
     };
 
-    private static BigInteger[] Key1 = new BigInteger[]
-    {
-            new BigInteger(new byte[] {0x2F, 0x6C, 0x57, 0xCA, 0x2E, 0x26, 0x0C, 0x76, 0x01 }), // Modulus
-            new BigInteger(new byte[] {0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }), // Exponent
-    };
-
     public const ulong CommonXorKey = 0xCC_0D_E3_A5_4E_75_50_F4;
 
-    public static int GetAccessCode()
+    public static int GetAccessCode(bool generateIfNeeded = false)
     {
-        using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion"))
+        int val = Utils.GetCurrentProductId(generateIfNeeded);
+        if (val == -1)
+            return -1;
+
+        byte[] productId = BitConverter.GetBytes(val);
+        int rawVal = 0;
+        for (int i = 0; i < productId.Length; i++)
         {
-            if (key != null)
+            int k = productId[i] % 10;
+
+            rawVal += ((i + rawVal) % 3) switch
             {
-                var val = key.GetValue("ProductId");
-                if (val is not int valInt)
-                    return -1;
+                1 => 2345 * k,
+                2 => 3456 * k,
+                3 => 4567 * k,
+                _ => 1234 * k,
+            };
 
-                byte[] productId = BitConverter.GetBytes(valInt);
-                int rawVal = 0;
-                for (int i = 0; i < productId.Length; i++)
-                {
-                    int k = productId[i] % 10;
-
-                    rawVal += ((i + rawVal) % 3) switch
-                    {
-                        1 => 2345 * k,
-                        2 => 3456 * k,
-                        3 => 4567 * k,
-                        _ => 1234 * k,
-                    };
-
-                }
-
-                return rawVal % 10000;
-            }
         }
 
-        return -1;
+        return rawVal % 10000;
+    }
+
+    public static void GetCurrentCodes()
+    {
+        int accessCode = GetAccessCode(generateIfNeeded: true);
+        if (accessCode == -1)
+        {
+            return;
+        }
+
+        Console.WriteLine($"Access Code: {accessCode}");
+        foreach (var cheatInfo in Cheats)
+        {
+            string cheat = GetCodeForCheat(accessCode, cheatInfo.Key);
+            Console.WriteLine($"{cheatInfo.Value}: {cheat}");
+        }
     }
 
     public static string GetCodeForCheat(int accessCode, byte cheatId)
     {
-        byte[] kBuf = new byte[0x10];
-        Key1[0].TryWriteBytes(kBuf, out _);
-        ushort kShort = BinaryPrimitives.ReadUInt16LittleEndian(kBuf);
+        BigInteger p = new(KeyStore.RSAKeys["RD3_PC"].P);
+        BigInteger q = new(KeyStore.RSAKeys["RD3_PC"].Q);
+
+        BigInteger n = p * q;
+        BigInteger phiOfN = (p - 1) * (q - 1);
+        BigInteger d = Utils.ModInverse(new BigInteger(KeyStore.RSAKeys["RD3_PC"].Exponent), phiOfN);
+
+        byte[] saltBuf = new byte[0x10];
+        n.TryWriteBytes(saltBuf, out int written);
+        ushort salt = BinaryPrimitives.ReadUInt16LittleEndian(saltBuf);
 
         byte[] k = new byte[6];
         k[0] = 0;
         k[1] = cheatId;
         BinaryPrimitives.WriteInt16LittleEndian(k.AsSpan(0x02), (short)accessCode);
-        BinaryPrimitives.WriteInt16LittleEndian(k.AsSpan(0x04), (short)kShort);
+        BinaryPrimitives.WriteInt16LittleEndian(k.AsSpan(0x04), (short)salt);
 
         var numb = new BigInteger(k);
         numb ^= CommonXorKey;
 
-        // No private key to continue :^(
+        BigInteger encNumber = BigInteger.ModPow(numb, d, n);
+        string dec = "";
+        while (encNumber > 0)
+        {
+            byte b = (byte)(encNumber & 0x1F);
+            char ch = (char)(b + (byte)'0');
+            if (ch >= ':')
+                ch = (char)(b + (byte)'7');
+            if (ch >= 'I')
+                ch = (char)((byte)ch + 1);
+            if (ch >= 'O')
+                ch = (char)((byte)ch + 1);
+            if (ch >= 'S')
+                ch = (char)((byte)ch + 1);
+            if (ch >= 'Z')
+                ch = (char)((byte)ch + 1);
 
-        return "nope";
+            dec += ch;
+            encNumber >>= 5;
+        }
+
+        return dec;
     }
 
 
@@ -103,7 +133,7 @@ public class CodeCheck
                     v <<= 5;
             }
 
-            var inputDecrypted = DoModular(v, 1, pubKey);
+            var inputDecrypted = Utils.DoModular(v, 1, pubKey);
             inputDecrypted ^= CommonXorKey;
 
             byte[] kBuf = new byte[0x10];
@@ -112,7 +142,7 @@ public class CodeCheck
 
             byte[] target = new byte[6];
             target[0] = 0;
-            target[1] = cheatId;
+            target[1] = (byte)cheatId;
             BinaryPrimitives.WriteInt16LittleEndian(target.AsSpan(0x02), (short)accessCode);
             BinaryPrimitives.WriteInt16LittleEndian(target.AsSpan(0x04), (short)kShort);
 
@@ -125,16 +155,6 @@ public class CodeCheck
         }
 
         return false;
-    }
-
-    private static BigInteger DoModular(BigInteger val, int count, BigInteger[] dataVal)
-    {
-        for (int i = 0; i < count; i++)
-        {
-            return BigInteger.ModPow(val, dataVal[1], dataVal[0]);
-        }
-
-        return 0;
     }
 
     private static byte XorChar(char c)
