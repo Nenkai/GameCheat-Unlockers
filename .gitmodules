@@ -1,3 +1,4 @@
-[submodule "RD3PlainCheats/source/Utils"]
-	path = RD3PlainCheats/source/Utils
+[submodule "RDAccessCodeFix/source/Utils"]
+	path = RDAccessCodeFix/source/Utils
 	url = https://github.com/CookiePLMonster/ModUtils.git
+	branch = master
