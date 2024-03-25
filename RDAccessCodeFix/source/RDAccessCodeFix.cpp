@@ -1,6 +1,7 @@
 
 #include "Utils/MemoryMgr.h"
 #include "Utils/Patterns.h"
+#include "Utils/ScopedUnprotect.hpp"
 
 #include <cstdint>
 
@@ -13,6 +14,8 @@ static auto* const pRegCreateKeyEx_LicenseKey = &RegCreateKeyEx_LicenseKey;
 
 void OnInitializeHook()
 {
+	static_assert(std::string_view(__FUNCSIG__).find("__stdcall") != std::string_view::npos, "This codebase must default to __stdcall, please change your compilation settings.");
+
 	auto Protect = ScopedUnprotect::UnprotectSectionOrFullModule( GetModuleHandle( nullptr ), ".text" );
 
 	using namespace Memory;

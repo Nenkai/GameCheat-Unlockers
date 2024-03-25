@@ -351,3 +351,6 @@ MigrationBackup/
 
 # premake5 build directory
 build/
+
+# vcpkg cache
+vcpkg_installed/
