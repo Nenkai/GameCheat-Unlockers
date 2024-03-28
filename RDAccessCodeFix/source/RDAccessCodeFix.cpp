@@ -76,7 +76,7 @@ void OnInitializeHook()
 	{
 		void* regOpenKey[] = {
 			get_pattern("83 CE FF FF 15 ? ? ? ? 85 C0", 3 + 2),
-			get_pattern("89 7C 24 40 FF 15 ? ? ? ? 85 C0", 4 + 2)
+			get_pattern("89 7C 24 40 FF 15 ? ? ? ? 85 C0", 4 + 2) // RD1 doesn't have this, but because randomness works fine, we want the entire pattern to fail
 		};
 
 		for (void* addr : regOpenKey)
@@ -89,6 +89,7 @@ void OnInitializeHook()
 	
 	// Restore rand()-based access code generation, as many people
 	// nowadays share the same ProductId after upgrading to Win10/11
+	// This works fine in RD1, so we only want to ensure that RD1 never tries to read the Product ID
 	try
 	{
 		auto generate_reference_code = get_pattern("56 89 84 24 ? ? ? ? 8D 44 24 0C", -11);
@@ -125,7 +126,16 @@ void OnInitializeHook()
 
 		InjectHook(generate_reference_code, GenerateReferenceCode_Stub, HookType::Jump);
 	}
-	TXN_CATCH();
+	catch (hook::txn_exception&)
+	{
+		// RD1 variation, only disable Bonus_GenerateReferenceCode
+		try
+		{
+			auto generate_reference_code = get_pattern("8D 44 24 0C 50 8D 4C 24 08", -7);
+			InjectHook(generate_reference_code, GenerateReferenceCode_Stub, HookType::Jump);
+		}
+		TXN_CATCH();
+	}
 
 
 	// Allow plaintext cheats for every cheat code
@@ -140,8 +150,17 @@ void OnInitializeHook()
 		catch (hook::txn_exception&)
 		{
 			// RD2
-			auto cheat_encrypted_only = get_pattern("0F BE 47 FF 85 C0 75 5B", 6);
-			Nop(cheat_encrypted_only, 2);
+			try
+			{
+				auto cheat_encrypted_only = get_pattern("0F BE 47 FF 85 C0 75 5B", 6);
+				Nop(cheat_encrypted_only, 2);
+			}
+			catch (hook::txn_exception&)
+			{
+				// RD1
+				auto cheat_encrypted_only = get_pattern("33 C0 83 F9 09 73", 2);
+				Patch<uint32_t>(cheat_encrypted_only, 0xC3); // put retn after xor eax, eax
+			}
 		}
 	}
 	TXN_CATCH();
