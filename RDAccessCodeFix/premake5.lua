@@ -1,17 +1,62 @@
-workspace "RD3PlainCheats"
+-- Custom API additions START
+require('vstudio')
+
+premake.api.register {
+	name = "vcpkg",
+	scope = "config",
+	kind = "boolean"
+}
+premake.api.register {
+	name = "vcpkgmanifest",
+	scope = "config",
+	kind = "boolean"
+}
+premake.api.register {
+	name = "vcpkgstatic",
+	scope = "config",
+	kind = "boolean"
+}
+premake.api.register {
+	name = "vcpkgconfig",
+	scope = "config",
+	kind = "string"
+}
+
+premake.override(premake.vstudio.vc2010.elements, "configurationProperties", function(base, cfg)
+	local calls = base(cfg)
+	table.insert(calls, function(cfg)
+		if cfg.vcpkg ~= nil then
+			premake.w('<VcpkgEnabled>%s</VcpkgEnabled>', cfg.vcpkg)
+		end
+		if cfg.vcpkgmanifest ~= nil then
+			premake.w('<VcpkgEnableManifest>%s</VcpkgEnableManifest>', cfg.vcpkgmanifest)
+		end
+		if cfg.vcpkgstatic ~= nil then
+			premake.w('<VcpkgUseStatic>%s</VcpkgUseStatic>', cfg.vcpkgstatic)
+		end
+		if cfg.vcpkgconfig ~= nil then
+			premake.w('<VcpkgConfiguration>%s</VcpkgConfiguration>', cfg.vcpkgconfig)
+		end
+	end)
+	return calls
+end)
+-- Custom API additions END
+
+workspace "RDAccessCodeFix"
 	platforms { "Win32" }
 
-project "RD3PlainCheats"
+project "RDAccessCodeFix"
 	kind "SharedLib"
 	targetextension ".asi"
 	language "C++"
+	callingconvention "stdcall"
 
 	include "source/VersionInfo.lua"
 	files { "**/MemoryMgr.h", "**/Patterns.*", "**/HookInit.hpp" }
 
 
 workspace "*"
-	configurations { "Debug", "Release", "Master" }
+	configurations { "Debug", "Release", "Shipping" }
 	location "build"
 
 	vpaths { ["Headers/*"] = "source/**.h",
@@ -20,6 +65,8 @@ workspace "*"
 	}
 
 	files { "source/*.h", "source/*.cpp", "source/resources/*.rc" }
+
+	vcpkgmanifest "on"
 
 	-- Disable exceptions in WIL
 	defines { "WIL_SUPPRESS_EXCEPTIONS" }
@@ -37,9 +84,9 @@ filter "configurations:Debug"
 	defines { "DEBUG" }
 	runtime "Debug"
 
- filter "configurations:Master"
+filter "configurations:Shipping"
 	defines { "NDEBUG", "RESULT_DIAGNOSTICS_LEVEL=0", "RESULT_INCLUDE_CALLER_RETURNADDRESS=0" }
-	symbols "Off"
+	linkoptions { "/pdbaltpath:%_PDB%" }
 
 filter "configurations:not Debug"
 	optimize "Speed"

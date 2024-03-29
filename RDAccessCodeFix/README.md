@@ -1,10 +1,8 @@
-# RD3 Plaintext Cheats Unlocker
+# Race Driver Access Code Fix
 
-This plugin unlocks plaintext cheat codes in TOCA Race Driver 3, so cheat codes can be used without an access code.
-Additionally, a registry query used by the game to compute the access code has been fixed for 64-bit systems and/or
-Windows 10, so the access code will not show as `????` anymore.
-
-Refer to [RD3Tools](../RD3Tools/#cheat-table) for a full list of cheats.
+This plugin fixes a bug in TOCA Race Driver 2 and 3 where the access code wasn't generated correctly on 64-bit systems
+and/or Windows 10, rendering bonus codes unusable. For better randomness of bonus codes, the console behaviour of picking
+a random access code has been restored, since many users nowadays share the same `ProductId` after upgrading to Windows 10/11.
 
 ## Research and Notes
 

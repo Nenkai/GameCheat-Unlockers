@@ -1,0 +1,47 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+    build:
+        name: Build RDAccessCodeFix
+        runs-on: windows-2022
+        env:
+            name: RDAccessCodeFix
+        defaults:
+            run:
+                working-directory: ./RDAccessCodeFix
+        strategy:
+            matrix:
+                configuration: [Release, Shipping]
+
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@v4
+              with:
+                submodules: recursive
+            - name: Cache vcpkg
+              uses: actions/cache@v4
+              with:
+                path: vcpkg_installed
+                key: ${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}
+            - name: Setup Premake5
+              uses: abel0b/setup-premake@v2.4
+              with:
+                version: 5.0.0-beta2
+            - name: Add MSBuild to PATH
+              uses: microsoft/setup-msbuild@v2
+            - name: Compile ${{ matrix.configuration }}
+              run: |
+                premake5 vs2022
+                vcpkg integrate install
+                msbuild build/${{ env.name }}.sln /t:rebuild /p:Configuration=${{ matrix.configuration }}
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                name: ${{ env.name }}-${{ matrix.configuration }}
+                if-no-files-found: error
+                path: |
+                  RDAccessCodeFix/build/bin/**/*.asi
+                  RDAccessCodeFix/build/bin/**/*.dll
+                  RDAccessCodeFix/build/bin/**/*.exe
+                  RDAccessCodeFix/build/bin/**/*.pdb
